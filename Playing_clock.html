@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Techno Equation Clock</title>
+<style>
+    body {
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background: radial-gradient(circle at center, #0b0c10, #1f2833);
+        font-family: 'Courier New', monospace;
+        color: #00fffc;
+        overflow: hidden;
+    }
+
+    canvas {
+        background: #0b0c10;
+        border-radius: 20px;
+        box-shadow: 0 0 60px rgba(0,255,255,0.6), inset 0 0 20px rgba(0,255,255,0.2);
+    }
+
+    .note {
+        position: absolute;
+        left: calc(50% + 320px);
+        top: 40px;
+        width: 240px;
+        font-size: 12px;
+        font-style: italic;
+        color: #00fffc;
+        line-height: 1.4;
+        text-shadow: 0 0 5px #00fffc;
+    }
+</style>
+</head>
+<body>
+
+<canvas id="clock" width="860" height="600"></canvas>
+<div class="note" id="note">Setting: Origami = Sofia = Valis = Rosa = Anna = lne = Ra = Osiris = Christina = Alexandra = Claymotion = Ion = 1</div>
+
+<script>
+const canvas = document.getElementById('clock');
+const ctx = canvas.getContext('2d');
+
+const CANVAS_SIZE = 600;
+const CENTER = CANVAS_SIZE / 2;
+const RADIUS = CANVAS_SIZE * 0.42;
+
+const equations = {
+    12: "E = E^origami",
+    1:  "E = E^sofia",
+    2:  "E = E^valis",
+    3:  "E = E^Rosa",
+    4:  "E = E^Ion",
+    5:  "E = E^Anna",
+    6:  "E = E^lne",
+    7:  "E = E^Ra",
+    8:  "E = E^Osiris",
+    9:  "E = E^Christina",
+    10: "E = E^Alexandra",
+    11: "E = E^Claymotion",
+};
+
+function drawFace() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    // Outer glowing circle
+    ctx.beginPath();
+    ctx.arc(CENTER,CENTER,RADIUS,0,Math.PI*2);
+    ctx.fillStyle = '#0b0c10';
+    ctx.fill();
+    ctx.strokeStyle = '#00fffc';
+    ctx.lineWidth = 4;
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = '#00fffc';
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Tick marks
+    for(let i=0;i<60;i++){
+        const angle = (i*6-90)*Math.PI/180;
+        const outer = RADIUS;
+        const inner = (i%5===0)?RADIUS-18:RADIUS-10;
+        ctx.beginPath();
+        ctx.moveTo(CENTER + Math.cos(angle)*inner, CENTER + Math.sin(angle)*inner);
+        ctx.lineTo(CENTER + Math.cos(angle)*outer, CENTER + Math.sin(angle)*outer);
+        ctx.lineWidth = (i%5===0)?3:1;
+        ctx.strokeStyle = '#00fffc';
+        ctx.stroke();
+    }
+
+    // Hour equations
+    const label_radius = RADIUS-48;
+    for(let h=1; h<=12; h++){
+        let label = equations[h] || '';
+        const angle = ((h%12)*30-90)*Math.PI/180;
+        const x = CENTER + Math.cos(angle)*label_radius;
+        const y = CENTER + Math.sin(angle)*label_radius;
+        let font_size = (label.length>18)?10:12;
+        ctx.font = `bold ${font_size}px Courier New`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#00fffc';
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = '#00fffc';
+        ctx.fillText(label,x,y);
+        ctx.shadowBlur = 0;
+    }
+
+    // Center hub
+    ctx.beginPath();
+    ctx.arc(CENTER,CENTER,6,0,Math.PI*2);
+    ctx.fillStyle = '#00fffc';
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = '#00fffc';
+    ctx.fill();
+    ctx.shadowBlur = 0;
+}
+
+function drawHand(angle,length,width,color){
+    const x = CENTER + Math.cos(angle)*length;
+    const y = CENTER + Math.sin(angle)*length;
+    ctx.beginPath();
+    ctx.moveTo(CENTER,CENTER);
+    ctx.lineTo(x,y);
+    ctx.lineWidth = width;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = color;
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = color;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+}
+
+function updateClock(){
+    drawFace();
+
+    const now = new Date();
+    const sec = now.getSeconds() + now.getMilliseconds()/1000;
+    const minute = now.getMinutes() + sec/60;
+    const hour = (now.getHours()%12)+minute/60;
+
+    const sec_angle = (sec*6-90)*Math.PI/180;
+    const min_angle = (minute*6-90)*Math.PI/180;
+    const hour_angle = (hour*30-90)*Math.PI/180;
+
+    drawHand(hour_angle,RADIUS-90,6,'#ff00ff');
+    drawHand(min_angle,RADIUS-50,4,'#00ffff');
+    drawHand(sec_angle,RADIUS-28,2,'#ffff00');
+
+    // tail for second hand
+    const tail_x = CENTER - Math.cos(sec_angle)*20;
+    const tail_y = CENTER - Math.sin(sec_angle)*20;
+    drawHand(Math.atan2(CENTER-tail_y, CENTER-tail_x),20,2,'#ffff00');
+
+    // digital time
+    ctx.font = '14px Courier New';
+    ctx.fillStyle = '#00fffc';
+    ctx.textAlign = 'center';
+    ctx.fillText(now.toLocaleTimeString(), CENTER, CENTER + RADIUS + 28);
+
+    requestAnimationFrame(updateClock);
+}
+
+updateClock();
+</script>
+
+</body>
+</html>
